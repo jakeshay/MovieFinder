@@ -4,10 +4,11 @@ import json
 import requests
 from bs4 import BeautifulSoup
 
-def getMovie(movieName):
+def getMovie(movieName, year):
     url = "https://movie-database-imdb-alternative.p.rapidapi.com/"
-    correctAmp = movieName.replace("&amp;", "&")
-    querystring = {"s":correctAmp,"page":"1","r":"json"}
+    movieName = movieName.replace("&amp;", "&")
+    movieName = movieName.replace("-", "")
+    querystring = {"s":movieName,"page":"1","y":year,"r":"json"}
 
     headers = {
         'x-rapidapi-host': "movie-database-imdb-alternative.p.rapidapi.com",
@@ -104,7 +105,7 @@ def intoDB(mydb, imdb, data_dict):
 
 def webScrape():
     movies = []
-    response = requests.get("https://www.boxofficemojo.com/year/world/2018/?sort=domesticGrossToDate&ref_=bo_ydw__resort#table")
+    response = requests.get("https://www.boxofficemojo.com/year/world/2020/?sort=domesticGrossToDate&ref_=bo_ydw__resort#table")
     soup = BeautifulSoup(response.text, 'html.parser')
     titles = soup.findAll('td', attrs={"a-text-left mojo-field-type-release_group"})
     for title in titles:
@@ -116,7 +117,7 @@ def webScrape():
 
     return movies
 
-def fillDB():
+def fillDB(year):
     movies = webScrape()
     failed = []
     mydb = mysql.connector.connect(
@@ -126,9 +127,9 @@ def fillDB():
             database = "MovieFinder"
         )
 
-    for movie in movies[:10]:
+    for movie in movies[:50]:
         print("Currently adding: " + movie)
-        imbd, data = getMovie(movie)
+        imbd, data = getMovie(movie, year)
         if (imbd == "failed"):
             failed.append(movie)
             print("Could not find: " + movie)
@@ -147,4 +148,17 @@ def fillDB():
     mydb.close()
 
 
-fillDB()
+def addMovie(title):
+    mydb = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="",
+        database="MovieFinder"
+    )
+
+    imbd, data = getMovie(title)
+    intoDB(mydb, imbd, data)
+
+    mydb.close()
+
+fillDB("2020")

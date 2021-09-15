@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
 
         Site site = new Site();
         /*site.createMovie("The Martian", "Ridley Scott", Arrays.asList("Perseverance", "Ingenuity"), Arrays.asList("Sci-Fi", "Space"), Arrays.asList("Matt Damon", "Kristen Wigg"));
@@ -19,8 +19,6 @@ public class Main {
         */
         //site.makeConnection();
 
-        site.retrieveMovies();
-        site.search("Iron Man");
-
+        site.search("Bloodshot", 2020);
     }
 }
