@@ -17,7 +17,12 @@ public class DbConnect {
         this.factory = new MovieFactory();
     }
 
-
+    /**
+     * Find movie in the DB, parse data and create a new Movie object
+     * @param title of movie
+     * @param year released
+     * @return new movie object with DB data
+     */
     public Movie findMovie(String title, int year) {
         Movie result = null;
         try(Connection conn = DriverManager.getConnection(url, user, pw)) {
@@ -32,41 +37,11 @@ public class DbConnect {
                 String runtime = rs.getString("Runtime");
                 double meta = rs.getDouble("Metascore");
                 double imdb = rs.getDouble("imdbRating");
-            query = String.format("SELECT Name FROM Directors WHERE MovieID = '%s'", id);
-            Statement stmt2 = conn.createStatement();
-            ResultSet rs2 = stmt2.executeQuery(query);
-            List<String> directors = new ArrayList<>();
 
-            while (rs2.next()) {
-                directors.add(rs2.getString("Name"));
-            }
-
-            query = String.format("SELECT Name FROM Writers WHERE MovieID = '%s'", id);
-            Statement stmt3 = conn.createStatement();
-            ResultSet rs3 = stmt3.executeQuery(query);
-            List<String> writers = new ArrayList<>();
-
-            while (rs3.next()) {
-                writers.add(rs3.getString("Name"));
-            }
-
-            query = String.format("SELECT Name FROM Genres WHERE MovieID = '%s'", id);
-            Statement stmt4 = conn.createStatement();
-            ResultSet rs4 = stmt4.executeQuery(query);
-            List<String> genres = new ArrayList<>();
-
-            while (rs4.next()) {
-                genres.add(rs4.getString("Name"));
-            }
-
-            query = String.format("SELECT Name FROM Actors WHERE MovieID = '%s'", id);
-            Statement stmt5 = conn.createStatement();
-            ResultSet rs5 = stmt5.executeQuery(query);
-            List<String> actors = new ArrayList<>();
-
-            while (rs5.next()) {
-                actors.add(rs5.getString("Name"));
-            }
+            List<String> directors = getData(id, "Directors");
+            List<String> writers = getData(id, "Writers");
+            List<String> genres = getData(id, "Genres");
+            List<String> actors = getData(id, "Actors");
 
             result = factory.createMovie(id, title, year, rating, runtime, meta, imdb, directors, writers, genres, actors);
 
@@ -77,58 +52,31 @@ public class DbConnect {
         return result;
     }
 
+    /**
+     * Find movie by id
+     * @param id of movie
+     * @return new movie object with returned data from db
+     */
     public Movie findMovieID(String id) {
         Movie result = null;
-        try(Connection conn = DriverManager.getConnection(url, user, pw);) {
+        try(Connection conn = DriverManager.getConnection(url, user, pw)) {
             System.out.println(String.format("Finding: %s", id));
 
-            String query = String.format("SELECT * FROM Movie WHERE MovieID = '%s'", id);
+            String query = String.format("SELECT * FROM Movie WHERE MovieID = '%s';", id);
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(query);
             rs.next();
-
             String title = rs.getString("Title");
             int year = rs.getInt("ReleaseYear");
-            String rating =  rs.getString("Rating");
+            String rating = rs.getString("Rating");
             String runtime = rs.getString("Runtime");
             double meta = rs.getDouble("Metascore");
             double imdb = rs.getDouble("imdbRating");
 
-            query = String.format("SELECT Name FROM Directors WHERE MovieID = '%s'", id);
-            Statement stmt2 = conn.createStatement();
-            ResultSet rs2 = stmt2.executeQuery(query);
-            List<String> directors = new ArrayList<>();
-
-            while (rs2.next()) {
-                directors.add(rs2.getString("Name"));
-            }
-
-            query = String.format("SELECT Name FROM Writers WHERE MovieID = '%s'", id);
-            Statement stmt3 = conn.createStatement();
-            ResultSet rs3 = stmt3.executeQuery(query);
-            List<String> writers = new ArrayList<>();
-
-            while (rs3.next()) {
-                writers.add(rs3.getString("Name"));
-            }
-
-            query = String.format("SELECT Name FROM Genres WHERE MovieID = '%s'", id);
-            Statement stmt4 = conn.createStatement();
-            ResultSet rs4 = stmt4.executeQuery(query);
-            List<String> genres = new ArrayList<>();
-
-            while (rs4.next()) {
-                genres.add(rs4.getString("Name"));
-            }
-
-            query = String.format("SELECT Name FROM Actors WHERE MovieID = '%s'", id);
-            Statement stmt5 = conn.createStatement();
-            ResultSet rs5 = stmt5.executeQuery(query);
-            List<String> actors = new ArrayList<>();
-
-            while (rs5.next()) {
-                actors.add(rs5.getString("Name"));
-            }
+            List<String> directors = getData(id, "Directors");
+            List<String> writers = getData(id, "Writers");
+            List<String> genres = getData(id, "Genres");
+            List<String> actors = getData(id, "Actors");
 
             result = factory.createMovie(id, title, year, rating, runtime, meta, imdb, directors, writers, genres, actors);
 
@@ -139,21 +87,25 @@ public class DbConnect {
         return result;
     }
 
-    public List<String> directedBy(List<String> directors) {
-        List<String> results = new ArrayList<>();
-        try(Connection conn = DriverManager.getConnection(url, user, pw);) {
-            for (String director : directors) {
-                System.out.println(String.format("Search for movies directed by: %s", director));
+    /**
+     * Search by movie id in specified table
+     * @param id of movie
+     * @param type table to search
+     * @return data returned from db query
+     */
+    private List<String> getData(String id, String type) {
+        try(Connection conn = DriverManager.getConnection(url, user, pw)) {
+            String query = String.format("SELECT Name FROM %s WHERE MovieID = '%s'", type, id);
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(query);
+            List<String> data = new ArrayList<>();
 
-                String query = String.format("SELECT * FROM Directors WHERE Name = '%s'", director);
-                Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery(query);
-                rs.next();
-
-                results.add(rs.getString("MovieID"));
-
+            while (rs.next()) {
+                data.add(rs.getString("Name"));
             }
-            return results;
+
+            return data;
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -161,57 +113,17 @@ public class DbConnect {
         return null;
     }
 
-    public List<String> writtenBy(List<String> writers) {
+    /**
+     * search for movie id's
+     * @param data parameter for query
+     * @param type table to search
+     * @return list of movie id's
+     */
+    public List<String> searchByType(List<String> data, String type) {
         List<String> results = new ArrayList<>();
         try(Connection conn = DriverManager.getConnection(url, user, pw);) {
-            for (String writer : writers) {
-                System.out.println(String.format("Search for movies written by: %s", writer));
-
-                String query = String.format("SELECT * FROM Writers WHERE Name = '%s'", writer);
-                Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery(query);
-                rs.next();
-
-                results.add(rs.getString("MovieID"));
-
-            }
-            return results;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    public List<String> byGenres(List<String> genres) {
-        List<String> results = new ArrayList<>();
-        try(Connection conn = DriverManager.getConnection(url, user, pw);) {
-            for (String genre : genres) {
-                System.out.println(String.format("Search for movies with genre: %s", genre));
-
-                String query = String.format("SELECT * FROM Genres WHERE Name = '%s'", genre);
-                Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery(query);
-                rs.next();
-
-                results.add(rs.getString("MovieID"));
-
-            }
-            return results;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    public List<String> byActors(List<String> actors) {
-        List<String> results = new ArrayList<>();
-        try(Connection conn = DriverManager.getConnection(url, user, pw);) {
-            for (String actor : actors) {
-                System.out.println(String.format("Search for movies starring: %s", actor));
-
-                String query = String.format("SELECT * FROM Actors WHERE Name = '%s'", actor);
+            for (String d : data) {
+                String query = String.format("SELECT * FROM %s WHERE Name = '%s'", type, d);
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(query);
                 rs.next();

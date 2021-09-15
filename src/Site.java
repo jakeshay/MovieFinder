@@ -11,10 +11,19 @@ public class Site {
         this.connect = new DbConnect();
     }
 
+    /**
+     * Update current dictionary of movies from search
+     */
     private void updateMovies() {
         this.movies = search.updateMovies();
     }
 
+    /**
+     * Find and return a movie, if it doesn't already exist in the dictionary then call getMovie method and pull from DB
+     * @param title of movie
+     * @param year released
+     * @return movie object
+     */
     public Movie findMovie(String title, int year) {
         for (Enumeration e = movies.keys(); e.hasMoreElements();) {
             String id = (String) e.nextElement();
@@ -24,10 +33,16 @@ public class Site {
             }
         }
 
-        return null;
+        return getMovie(title, year);
     }
 
-    public Movie getMovie(String title, int year) {
+    /**
+     * Send data to DbConnect to find and create new movie object with DB details
+     * @param title of movie
+     * @param year released
+     * @return movie object
+     */
+    private Movie getMovie(String title, int year) {
         Movie m = connect.findMovie(title, year);
         movies.put(m.getId(), m);
         search.getUpdate(movies);
@@ -35,11 +50,14 @@ public class Site {
         return m;
     }
 
+    /**
+     * Display movie details
+     * @param name of movie
+     * @param year released
+     */
     public void displayMovie(String name, int year) {
         Movie movie = findMovie(name, year);
-        if (movie == null) {
-            movie = getMovie(name, year);
-        }
+
         System.out.println(movie.getId());
         System.out.println(name);
         System.out.println(year);
@@ -65,20 +83,20 @@ public class Site {
         }
     }
 
+    /**
+     * Search DB to find all similar movies and return them in order of similarity
+     * @param movieName title of movie
+     * @param year released
+     */
     public void search(String movieName, int year) {
         Movie m = findMovie(movieName, year);
-        if (m == null) {
-            m = getMovie(movieName, year);
-        }
-        search(m);
-    }
 
-    private void search(Movie movie) {
-        List<Movie> results = search.searchMovies(movie);
-        for (Movie m: results) {
-            System.out.println(m.getTitle());
+        List<Movie> results = search.searchMovies(m);
+        for (Movie movie: results) {
+            System.out.println(movie.getTitle());
         }
-        movies = search.updateMovies();
+
+        updateMovies();
     }
 
     public Dictionary<String, Movie> getMovies() {

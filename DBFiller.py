@@ -64,6 +64,7 @@ def intoDB(mydb, imdb, data_dict):
     split = data_dict['Director'].split(',')
     values = []
     for x in split:
+        x = x.replace(" ", "")
         val = (x, imdb)
         values.append(val)
 
@@ -74,6 +75,7 @@ def intoDB(mydb, imdb, data_dict):
     split = data_dict['Writer'].split(',')
     values = []
     for x in split:
+        x = x.replace(" ", "")
         val = (x, imdb)
         values.append(val)
 
@@ -84,6 +86,7 @@ def intoDB(mydb, imdb, data_dict):
     split = data_dict['Genre'].split(',')
     values = []
     for x in split:
+        x = x.replace(" ", "")
         val = (x, imdb)
         values.append(val)
 
@@ -94,6 +97,7 @@ def intoDB(mydb, imdb, data_dict):
     split = data_dict['Actors'].split(',')
     values = []
     for x in split:
+        x = x.replace(" ", "")
         val = (x, imdb)
         values.append(val)
 
